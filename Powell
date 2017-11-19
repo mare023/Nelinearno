@@ -1,0 +1,63 @@
+function [ min ] = powell( f,x0,greska )
+
+    pocX = x0;
+    n = size(x0,2);
+    pravci = eye(n);
+    
+    while true
+        trenX = pocX;
+        for i=1:n
+            p = pravci(i,:);
+            y= @(x)(trenX(1)+p(1)*x).^2 + (trenX(1)+p(1)*x)*(trenX(2)+p(2)*x)+0.5*(trenX(2)+p(2)*x).^2+(trenX(1)+p(1)*x)+10*(trenX(2)+p(2)*x);
+            opt = zlatni(y,5,-5,10.^-5);
+            trenX = trenX+opt*p;
+        end
+        pravci = [pravci(2:n,:);trenX-pocX];
+        p = pravci(n,:);
+        y= @(x)(trenX(1)+p(1)*x).^2 + (trenX(1)+p(1)*x)*(trenX(2)+p(2)*x)+0.5*(trenX(2)+p(2)*x).^2+(trenX(1)+p(1)*x)+10*(trenX(2)+p(2)*x);
+        opt = zlatni(y,5,-5,10.^-5);
+        najmanje = pocX;
+        pocX = trenX+opt*p;
+        if(abs(f(pocX)-f(najmanje))<=greska)
+            min = pocX;
+            break;
+        end
+    end
+
+end
+
+//--------------------------------------------------------------------------------//
+
+
+function [ opt ] = zlatni( y,a0,b0,greska )
+    a = a0;
+    b = b0;
+    c = (3-(sqrt(5)))/2;
+    
+    while(abs(b-a)>=greska)
+        x1 = a+c*(b-a);
+        x2 = a+b-x1;
+        if(y(x1)<y(x2))
+            b = x2;
+        else
+            a = x1;
+        end
+    end
+    opt = a;
+end
+
+//--------------------------------------------------------------//
+
+f =@(x)x(1).^2 + x(1)*x(2)+0.5*x(2).^2+x(1)+10*x(2);
+
+x0 = [0, 0];
+greska = 10^-5;
+
+opt = powell(f,x0,greska)
+fopt = f(opt)
+
+[X1,X2]=meshgrid(-5:0.5:15, -30:0.5:30);
+Y = 2.*X1.^2+2.*X1.*X2+2.*X2.^2-6.*X1;
+mesh(X1,X2,Y);hold on;
+
+plot3(opt(1),opt(2),fopt,'ro');hold off;
