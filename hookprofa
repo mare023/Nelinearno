@@ -1,0 +1,53 @@
+function [x, f, cnt] = Hook_Jeeves( fun, x0, d, dmin )
+% Metoda HOOK-JEEVES za minimizaciju f-je više promenljivih bez ograni?enja
+% fun - funkcija cilja
+% x0 - po?etno poga?anje; d - po?etni korak; dmin - krajnja dužina koraka (uslov zaustavljanja)
+% x - izra?unat minimum; f - vrednost u minimumu; cnt - broj poziva fun
+
+n = length(x0); % broj promenljivih
+e = eye(n) * d; % pravci kretanja - ose
+x = x0; f = feval(fun,x); % prva bazna ta?ka
+cnt = 1; % broj izra?unavanja f-je cilja
+
+while e(1,1) > dmin % glavna petlja (traje dok je korak ve?i od dmin)
+    t = x; % teku?a ta?ka
+    for i=1:n % po svim promenljivim (po svim osama)
+        % pozitivan smer
+        z = t + e(:,i); y = feval(fun,z); cnt=cnt+1;
+        if y < f
+            t = z; f = y; % prihvata se (“-“ smer se onda ne razmatra)
+        else
+            % negativan smer
+            z = t - e(:,i); y = feval(fun,z); cnt=cnt+1;
+            if y < f
+                t = z; f = y; % prihvata se
+            end
+        end
+    end % ako oba smera “ne uspeju” uzima se slede?a osa
+    if all(t==x) % teku?a ta?ka se nije pomerila iz bazne ta?ke...
+        e = e * 0.5; % te se smanjuje korak
+    else
+        % skok u pravcu “spuštanja terena” - probam
+        x1 = t + (t-x); y1 = feval(fun,x1); cnt=cnt+1;
+        x = t; % x=nova bazna ta?ka, ako skok ne uspe
+        if y1 < f
+            % skok delimi?no uspeo, još se traži prva ta?ka u okolini x1 gde je f(z) manje nego u ta?ki x
+            for i=1:n % po svim koordinatama
+                % pozitivan smer
+                z = x1 + e(:,i); y = feval(fun,z); cnt=cnt+1;
+                if y < y1
+                    x = z; f = y;
+                    break; % bingo, nova bazna ta?ka, iska?em iz for petlje
+                end
+                % negativan smer (ovde se ne stiže ako “uspe pozitivan smer”)
+                z = x1 - e(:,i); y = feval(fun,z); cnt=cnt+1;
+                if y < y1
+                    x = z; f = y;
+                    break; % bingo, imam baznu ta?ku
+                end
+            end % ako ni jedan od pravaca (osa) ne daje bolje...
+                % rešenje od ta?ke x, ona postaje nova bazna ta?ka
+        end
+    end
+end % kraj glavne petlje
+
