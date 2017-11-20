@@ -1,0 +1,10 @@
+clc
+clear all
+
+y=@(x) x(1).^2+x(1)*x(2)+0.5*(x(2).^2)+x(1)+10*x(2);
+x0=[0;0];
+d=0.5;
+dmin=10^(-6);
+
+opt = Hook_Jeeves(y,x0,d,dmin)
+fopt = y(opt)
